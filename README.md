@@ -1,6 +1,8 @@
-# PyGame Dungeon
+# Dungeon Python game
 
-A simple PyGame project template.
+A simple game using https://github.com/pygame-community/pygame-ce
+
+![Screenshot of PyGame Dungeon](docs/images/game.jpeg)
 
 ## Setup Instructions
 
@@ -61,4 +63,5 @@ pygame-dungeon/
 # Credits
 
 * Knight: https://pixelfelix.itch.io/knight-anim-set
+* Enemy: https://binary-80.itch.io/dragonlord
 * Background: "pixelart 2d top-down dungeon game background. very simple with just outer walls with openings" AI prompt
