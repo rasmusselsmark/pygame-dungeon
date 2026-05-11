@@ -1,4 +1,5 @@
 import pygame
+import os
 from pygame.locals import *
 
 
@@ -13,6 +14,11 @@ class Game:
         self.running = False
         self.fps = 60
 
+        # Load background image
+        bg_path = os.path.join("assets", "images", "background.png")
+        self.background = pygame.image.load(bg_path).convert()
+        self.background = pygame.transform.scale(self.background, (width, height))
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -25,7 +31,7 @@ class Game:
         pass
 
     def draw(self):
-        self.screen.fill((20, 20, 30))
+        self.screen.blit(self.background, (0, 0))
         pygame.display.flip()
 
     def run(self):
