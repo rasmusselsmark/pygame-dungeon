@@ -22,6 +22,8 @@ class Enemy:
         self.attack_cooldown = 2.0  # seconds
         self.attack_timer = 0
         self.is_attacking = False
+        self.post_attack_idle_duration = 1.5  # seconds to idle after attack
+        self.post_attack_idle_timer = 0
 
         # Health
         self.health = 100
@@ -104,6 +106,10 @@ class Enemy:
         if self.attack_timer > 0:
             self.attack_timer -= dt
 
+        # Update post-attack idle timer
+        if self.post_attack_idle_timer > 0:
+            self.post_attack_idle_timer -= dt
+
         # Get distance to player
         player_center_x = player.x + player.display_size // 2
         player_center_y = player.y + player.display_size // 2
@@ -131,6 +137,15 @@ class Enemy:
                     self.is_attacking = False
                     self.frame = 0
                     self.attack_timer = self.attack_cooldown
+                    self.post_attack_idle_timer = self.post_attack_idle_duration
+
+        elif self.post_attack_idle_timer > 0:
+            # Post-attack idle state - don't move, just play idle animation
+            self.state = "idle"
+            self.animation_counter += self.animation_speed
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.frame = (self.frame + 1) % self.idle_frames
 
         elif distance <= self.attack_range and self.attack_timer <= 0:
             # Start attack
