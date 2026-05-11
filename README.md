@@ -55,5 +55,5 @@ pygame-dungeon/
 
 ## Requirements
 
-- Python 3.8 or higher
-- PyGame 2.6.0
+- Python 3.8 or higher (including Python 3.13+)
+- Pygame-CE (Community Edition) 2.5.0+
