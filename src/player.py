@@ -21,6 +21,9 @@ class Player:
         self.animation_speed = 0.15
         self.animation_counter = 0
         self.is_moving = False
+        self.is_attacking = False
+        self.attack_frame = 0
+        self.attack_frames = 6
 
         # Sprite rows for each direction (row index in sprite sheet)
         self.animations = {
@@ -28,6 +31,14 @@ class Player:
             "up": 2,
             "left": 3,
             "down": 4,
+        }
+
+        # Attack animation rows
+        self.attack_animations = {
+            "right": 16,
+            "up": 17,
+            "left": 18,
+            "down": 19,
         }
 
         # Current sprite
@@ -43,6 +54,29 @@ class Player:
 
     def update(self, keys):
         """Update player position and animation"""
+        # Handle attack
+        if keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
+            if not self.is_attacking:
+                self.is_attacking = True
+                self.attack_frame = 0
+
+        # If attacking, play attack animation
+        if self.is_attacking:
+            self.animation_counter += self.animation_speed * 1.5
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.attack_frame += 1
+
+                if self.attack_frame >= self.attack_frames:
+                    self.is_attacking = False
+                    self.attack_frame = 0
+
+            # Get attack sprite
+            row = self.attack_animations[self.direction]
+            self.current_sprite = self.get_sprite(self.attack_frame, row)
+            return
+
+        # Normal movement and animation
         dx = 0
         dy = 0
 
