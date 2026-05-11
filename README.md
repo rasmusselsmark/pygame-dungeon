@@ -1,6 +1,6 @@
 # Dungeon Python game
 
-A simple game using https://github.com/pygame-community/pygame-ce
+A simple game using https://github.com/pygame-community/pygame-ce for use in Coding Pirates Hedehusene for teaching programming for kids.
 
 ![Screenshot of PyGame Dungeon](docs/images/game.jpeg)
 
