@@ -1,0 +1,211 @@
+import pygame
+import os
+import math
+
+
+class Enemy:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.speed = 1.5
+        self.scale = 2
+
+        # State
+        self.state = "idle"  # idle, walk, attack
+        self.facing_left = False
+        self.frame = 0
+        self.animation_speed = 0.15
+        self.animation_counter = 0
+
+        # Combat
+        self.attack_range = 80
+        self.attack_cooldown = 2.0  # seconds
+        self.attack_timer = 0
+        self.is_attacking = False
+
+        # Health
+        self.health = 100
+        self.max_health = 100
+        self.is_alive = True
+
+        # Load sprite sheets
+        base_path = os.path.join("assets", "images", "dragon-lord")
+
+        # Idle: 4 frames, 74x74
+        self.idle_sheet = pygame.image.load(
+            os.path.join(base_path, "dragon_lord_idle_basic_74x74.png")
+        ).convert_alpha()
+        self.idle_frame_width = 74
+        self.idle_frame_height = 74
+        self.idle_frames = 4
+
+        # Walk: 8 frames, 74x74
+        self.walk_sheet = pygame.image.load(
+            os.path.join(base_path, "dragon_lord_walk_basic_74x74.png")
+        ).convert_alpha()
+        self.walk_frame_width = 74
+        self.walk_frame_height = 74
+        self.walk_frames = 8
+
+        # Attack: 16 frames, 90x70
+        self.attack_sheet = pygame.image.load(
+            os.path.join(base_path, "dragon_lord_attack_arms_90x70.png")
+        ).convert_alpha()
+        self.attack_frame_width = 90
+        self.attack_frame_height = 70
+        self.attack_frames = 16
+
+        # Current sprite
+        self.current_sprite = self.get_sprite("idle", 0)
+
+    def get_sprite(self, state, frame):
+        """Extract and scale a sprite from the appropriate sheet"""
+        if state == "idle":
+            sheet = self.idle_sheet
+            width = self.idle_frame_width
+            height = self.idle_frame_height
+        elif state == "walk":
+            sheet = self.walk_sheet
+            width = self.walk_frame_width
+            height = self.walk_frame_height
+        elif state == "attack":
+            sheet = self.attack_sheet
+            width = self.attack_frame_width
+            height = self.attack_frame_height
+        else:
+            return self.current_sprite
+
+        sprite = pygame.Surface((width, height), pygame.SRCALPHA)
+        sprite.blit(sheet, (0, 0), (frame * width, 0, width, height))
+
+        # Scale sprite
+        scaled = pygame.transform.scale(
+            sprite, (int(width * self.scale), int(height * self.scale))
+        )
+
+        # Flip if facing left
+        if self.facing_left:
+            scaled = pygame.transform.flip(scaled, True, False)
+
+        return scaled
+
+    def get_distance_to(self, target_x, target_y):
+        """Calculate distance to a point"""
+        dx = target_x - self.x
+        dy = target_y - self.y
+        return math.sqrt(dx * dx + dy * dy)
+
+    def update(self, player, dt):
+        """Update enemy AI and animation"""
+        if not self.is_alive:
+            return
+
+        # Update attack cooldown timer
+        if self.attack_timer > 0:
+            self.attack_timer -= dt
+
+        # Get distance to player
+        player_center_x = player.x + player.display_size // 2
+        player_center_y = player.y + player.display_size // 2
+        my_center_x = self.x + (self.idle_frame_width * self.scale) // 2
+        my_center_y = self.y + (self.idle_frame_height * self.scale) // 2
+
+        distance = self.get_distance_to(player_center_x, player_center_y)
+
+        # Update facing direction
+        if player_center_x < my_center_x:
+            self.facing_left = True
+        else:
+            self.facing_left = False
+
+        # State machine
+        if self.is_attacking:
+            # Continue attack animation
+            self.state = "attack"
+            self.animation_counter += self.animation_speed
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.frame += 1
+
+                if self.frame >= self.attack_frames:
+                    self.is_attacking = False
+                    self.frame = 0
+                    self.attack_timer = self.attack_cooldown
+
+        elif distance <= self.attack_range and self.attack_timer <= 0:
+            # Start attack
+            self.is_attacking = True
+            self.state = "attack"
+            self.frame = 0
+            self.animation_counter = 0
+
+        elif distance > self.attack_range:
+            # Move towards player
+            self.state = "walk"
+
+            # Calculate direction
+            dx = player_center_x - my_center_x
+            dy = player_center_y - my_center_y
+            distance = max(distance, 0.001)  # Avoid division by zero
+
+            # Normalize and apply speed
+            dx = (dx / distance) * self.speed
+            dy = (dy / distance) * self.speed
+
+            # Update position
+            self.x += dx
+            self.y += dy
+
+            # Update animation
+            self.animation_counter += self.animation_speed
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.frame = (self.frame + 1) % self.walk_frames
+
+        else:
+            # Idle
+            self.state = "idle"
+            self.animation_counter += self.animation_speed
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.frame = (self.frame + 1) % self.idle_frames
+
+        # Get current sprite
+        self.current_sprite = self.get_sprite(self.state, self.frame)
+
+    def draw(self, screen):
+        """Draw the enemy on screen"""
+        if self.is_alive:
+            screen.blit(self.current_sprite, (int(self.x), int(self.y)))
+
+            # Draw health bar
+            self.draw_health_bar(screen)
+
+    def draw_health_bar(self, screen):
+        """Draw health bar above enemy"""
+        bar_width = 60
+        bar_height = 5
+        bar_x = int(self.x + (self.idle_frame_width * self.scale - bar_width) // 2)
+        bar_y = int(self.y - 10)
+
+        # Background (red)
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+
+        # Health (green)
+        health_width = int((self.health / self.max_health) * bar_width)
+        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
+
+    def get_rect(self):
+        """Get enemy rect for collision detection"""
+        return pygame.Rect(
+            self.x, self.y,
+            self.idle_frame_width * self.scale,
+            self.idle_frame_height * self.scale
+        )
+
+    def take_damage(self, amount):
+        """Reduce enemy health"""
+        self.health -= amount
+        if self.health <= 0:
+            self.health = 0
+            self.is_alive = False

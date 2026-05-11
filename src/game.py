@@ -30,16 +30,26 @@ class Game:
                     self.running = False
 
     def update(self):
+        # Get delta time
+        dt = self.clock.get_time() / 1000.0
+
         # move player
         keys = pygame.key.get_pressed()
         self.player.update(keys)
+
+        # Update current level (enemies, etc.)
+        self.level_manager.current_level.update(self.player, dt)
 
         # check if player is at an exit
         self.level_manager.check_transition(self.player)
 
     def draw(self):
+        # Draw level (background and enemies)
         self.level_manager.current_level.draw(self.screen)
+
+        # Draw player on top
         self.player.draw(self.screen)
+
         pygame.display.flip()
 
     def run(self):

@@ -55,7 +55,7 @@ class Player:
     def update(self, keys):
         """Update player position and animation"""
         # Handle attack
-        if keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
+        if keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_SPACE]:
             if not self.is_attacking:
                 self.is_attacking = True
                 self.attack_frame = 0

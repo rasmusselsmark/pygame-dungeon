@@ -1,9 +1,10 @@
 import pygame
 import os
+from src.enemy import Enemy
 
 
 class Level:
-    def __init__(self, name, background_file, width, height):
+    def __init__(self, name, background_file, width, height, enemy_positions=None):
         self.name = name
         self.width = width
         self.height = height
@@ -25,8 +26,21 @@ class Level:
             "right": pygame.Rect(width - exit_height, height // 2 - exit_width // 2, exit_height, exit_width)
         }
 
+        # Enemies
+        self.enemies = []
+        if enemy_positions:
+            for pos in enemy_positions:
+                self.enemies.append(Enemy(pos[0], pos[1]))
+
+    def update(self, player, dt):
+        """Update all enemies in the level"""
+        for enemy in self.enemies:
+            enemy.update(player, dt)
+
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
+        for enemy in self.enemies:
+            enemy.draw(screen)
 
     def check_exit(self, player_rect):
         """Check if player is in an exit zone, return direction or None"""
@@ -41,10 +55,10 @@ class LevelManager:
         self.width = width
         self.height = height
 
-        # Create levels
+        # Create levels with enemies
         self.levels = {
             "dungeon": Level("dungeon", "dungeon.png", width, height),
-            "forest": Level("forest", "forest.png", width, height)
+            "forest": Level("forest", "forest.png", width, height, enemy_positions=[(600, 300)])
         }
 
         # Define level connections (level_name -> {direction: (next_level, entry_direction)})
