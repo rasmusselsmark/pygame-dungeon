@@ -1,7 +1,7 @@
 import pygame
-import os
 from pygame.locals import *
 from src.player import Player
+from src.level import LevelManager
 
 
 class Game:
@@ -15,10 +15,8 @@ class Game:
         self.running = False
         self.fps = 60
 
-        # Load background image
-        bg_path = os.path.join("assets", "images", "background.png")
-        self.background = pygame.image.load(bg_path).convert()
-        self.background = pygame.transform.scale(self.background, (width, height))
+        # Create level manager
+        self.level_manager = LevelManager(width, height)
 
         # Create player in center of screen
         self.player = Player(width // 2 - 24, height // 2 - 24)
@@ -32,11 +30,15 @@ class Game:
                     self.running = False
 
     def update(self):
+        # move player
         keys = pygame.key.get_pressed()
         self.player.update(keys)
 
+        # check if player is at an exit
+        self.level_manager.check_transition(self.player)
+
     def draw(self):
-        self.screen.blit(self.background, (0, 0))
+        self.level_manager.current_level.draw(self.screen)
         self.player.draw(self.screen)
         pygame.display.flip()
 
