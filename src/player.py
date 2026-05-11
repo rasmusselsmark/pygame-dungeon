@@ -25,6 +25,10 @@ class Player:
         self.attack_frame = 0
         self.attack_frames = 6
 
+        # Combat
+        self.attack_damage = 25
+        self.has_hit_this_attack = False
+
         # Sprite rows for each direction (row index in sprite sheet)
         self.animations = {
             "right": 1,
@@ -59,6 +63,7 @@ class Player:
             if not self.is_attacking:
                 self.is_attacking = True
                 self.attack_frame = 0
+                self.has_hit_this_attack = False
 
         # If attacking, play attack animation
         if self.is_attacking:
@@ -126,3 +131,19 @@ class Player:
     def get_rect(self):
         """Get player rect for collision detection"""
         return pygame.Rect(self.x, self.y, self.display_size, self.display_size)
+
+    def get_attack_rect(self):
+        """Get attack hitbox rect based on direction"""
+        attack_range = 60
+        attack_width = 50
+
+        if self.direction == "right":
+            return pygame.Rect(self.x + self.display_size, self.y, attack_range, self.display_size)
+        elif self.direction == "left":
+            return pygame.Rect(self.x - attack_range, self.y, attack_range, self.display_size)
+        elif self.direction == "up":
+            return pygame.Rect(self.x, self.y - attack_range, self.display_size, attack_range)
+        elif self.direction == "down":
+            return pygame.Rect(self.x, self.y + self.display_size, self.display_size, attack_range)
+
+        return pygame.Rect(0, 0, 0, 0)

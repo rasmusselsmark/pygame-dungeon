@@ -37,6 +37,18 @@ class Game:
         keys = pygame.key.get_pressed()
         self.player.update(keys)
 
+        # Check for player attacks hitting enemies
+        if self.player.is_attacking and not self.player.has_hit_this_attack:
+            # Check if we're in the middle of attack animation (frames 2-4)
+            if 2 <= self.player.attack_frame <= 4:
+                attack_rect = self.player.get_attack_rect()
+                for enemy in self.level_manager.current_level.enemies:
+                    if enemy.is_alive and not enemy.is_dying:
+                        if attack_rect.colliderect(enemy.get_rect()):
+                            enemy.take_damage(self.player.attack_damage)
+                            self.player.has_hit_this_attack = True
+                            break
+
         # Update current level (enemies, etc.)
         self.level_manager.current_level.update(self.player, dt)
 

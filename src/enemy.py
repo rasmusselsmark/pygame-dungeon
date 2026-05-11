@@ -11,11 +11,12 @@ class Enemy:
         self.scale = 2
 
         # State
-        self.state = "idle"  # idle, walk, attack
+        self.state = "idle"  # idle, walk, attack, dying
         self.facing_left = False
         self.frame = 0
         self.animation_speed = 0.15
         self.animation_counter = 0
+        self.is_dying = False
 
         # Combat
         self.attack_range = 80
@@ -57,6 +58,14 @@ class Enemy:
         self.attack_frame_height = 70
         self.attack_frames = 16
 
+        # Death: 36 frames, 160x160
+        self.death_sheet = pygame.image.load(
+            os.path.join(base_path, "dragon_lord_death_160x160.png")
+        ).convert_alpha()
+        self.death_frame_width = 160
+        self.death_frame_height = 160
+        self.death_frames = 36
+
         # Current sprite
         self.current_sprite = self.get_sprite("idle", 0)
 
@@ -74,6 +83,10 @@ class Enemy:
             sheet = self.attack_sheet
             width = self.attack_frame_width
             height = self.attack_frame_height
+        elif state == "dying":
+            sheet = self.death_sheet
+            width = self.death_frame_width
+            height = self.death_frame_height
         else:
             return self.current_sprite
 
@@ -99,6 +112,21 @@ class Enemy:
 
     def update(self, player, dt):
         """Update enemy AI and animation"""
+        # Handle death animation
+        if self.is_dying:
+            self.state = "dying"
+            self.animation_counter += self.animation_speed * 0.8
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.frame += 1
+
+                if self.frame >= self.death_frames:
+                    self.is_alive = False
+                    return
+
+            self.current_sprite = self.get_sprite(self.state, self.frame)
+            return
+
         if not self.is_alive:
             return
 
@@ -190,11 +218,28 @@ class Enemy:
 
     def draw(self, screen):
         """Draw the enemy on screen"""
-        if self.is_alive:
-            screen.blit(self.current_sprite, (int(self.x), int(self.y)))
+        if self.is_alive or self.is_dying:
+            # Calculate draw position
+            draw_x = int(self.x)
+            draw_y = int(self.y)
 
-            # Draw health bar
-            self.draw_health_bar(screen)
+            # Adjust position for death animation to keep enemy centered
+            if self.is_dying:
+                # Death sprite is 160x160, normal is 74x74
+                # Center the larger death sprite on the enemy's position
+                normal_width = self.idle_frame_width * self.scale
+                normal_height = self.idle_frame_height * self.scale
+                death_width = self.death_frame_width * self.scale
+                death_height = self.death_frame_height * self.scale
+
+                draw_x = int(self.x - (death_width - normal_width) // 2)
+                draw_y = int(self.y - (death_height - normal_height))
+
+            screen.blit(self.current_sprite, (draw_x, draw_y))
+
+            # Draw health bar (only if not dying)
+            if not self.is_dying:
+                self.draw_health_bar(screen)
 
     def draw_health_bar(self, screen):
         """Draw health bar above enemy"""
@@ -220,7 +265,12 @@ class Enemy:
 
     def take_damage(self, amount):
         """Reduce enemy health"""
+        if self.is_dying or not self.is_alive:
+            return
+
         self.health -= amount
         if self.health <= 0:
             self.health = 0
-            self.is_alive = False
+            self.is_dying = True
+            self.frame = 0
+            self.animation_counter = 0
