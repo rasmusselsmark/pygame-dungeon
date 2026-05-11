@@ -24,6 +24,16 @@ class Player:
         self.is_attacking = False
         self.attack_frame = 0
         self.attack_frames = 6
+        self.is_dying = False
+        self.death_frame = 0
+        self.death_frames = 8
+
+        # Health
+        self.health = 100
+        self.max_health = 100
+        self.is_alive = True
+        self.damage_cooldown = 1.0  # seconds between taking damage
+        self.damage_timer = 0
 
         # Combat
         self.attack_damage = 25
@@ -45,6 +55,9 @@ class Player:
             "down": 19,
         }
 
+        # Death animation row
+        self.death_animation_row = 15
+
         # Current sprite
         self.current_sprite = self.get_sprite(0, 0)
 
@@ -56,8 +69,31 @@ class Player:
                     self.sprite_size, self.sprite_size))
         return pygame.transform.scale(sprite, (self.display_size, self.display_size))
 
-    def update(self, keys):
+    def update(self, keys, dt=0):
         """Update player position and animation"""
+        # Update damage cooldown
+        if self.damage_timer > 0:
+            self.damage_timer -= dt
+
+        # Handle death animation
+        if self.is_dying:
+            self.animation_counter += self.animation_speed * 0.8
+            if self.animation_counter >= 1:
+                self.animation_counter = 0
+                self.death_frame += 1
+
+                if self.death_frame >= self.death_frames:
+                    self.death_frame = self.death_frames - 1  # Stay on last frame
+                    self.is_alive = False
+
+            self.current_sprite = self.get_sprite(self.death_frame, self.death_animation_row)
+            return
+
+        if not self.is_alive:
+            # Keep showing the last death frame
+            self.current_sprite = self.get_sprite(self.death_frames - 1, self.death_animation_row)
+            return
+
         # Handle attack
         if keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_SPACE]:
             if not self.is_attacking:
@@ -127,6 +163,24 @@ class Player:
     def draw(self, screen):
         """Draw the player on screen"""
         screen.blit(self.current_sprite, (self.x, self.y))
+        self.draw_health_bar(screen)
+
+    def draw_health_bar(self, screen):
+        """Draw health bar above player"""
+        if not self.is_alive and not self.is_dying:
+            return
+
+        bar_width = 60
+        bar_height = 5
+        bar_x = int(self.x + (self.display_size - bar_width) // 2)
+        bar_y = int(self.y - 10)
+
+        # Background (red)
+        pygame.draw.rect(screen, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+
+        # Health (green)
+        health_width = int((self.health / self.max_health) * bar_width)
+        pygame.draw.rect(screen, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
 
     def get_rect(self):
         """Get player rect for collision detection"""
@@ -147,3 +201,17 @@ class Player:
             return pygame.Rect(self.x, self.y + self.display_size, self.display_size, attack_range)
 
         return pygame.Rect(0, 0, 0, 0)
+
+    def take_damage(self, amount):
+        """Take damage with cooldown"""
+        if self.is_dying or not self.is_alive or self.damage_timer > 0:
+            return
+
+        self.health -= amount
+        self.damage_timer = self.damage_cooldown
+
+        if self.health <= 0:
+            self.health = 0
+            self.is_dying = True
+            self.death_frame = 0
+            self.animation_counter = 0

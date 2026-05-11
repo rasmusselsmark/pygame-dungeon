@@ -35,7 +35,7 @@ class Game:
 
         # move player
         keys = pygame.key.get_pressed()
-        self.player.update(keys)
+        self.player.update(keys, dt)
 
         # Check for player attacks hitting enemies
         if self.player.is_attacking and not self.player.has_hit_this_attack:
@@ -49,11 +49,21 @@ class Game:
                             self.player.has_hit_this_attack = True
                             break
 
+        # Check for enemy collision with player
+        if self.player.is_alive and not self.player.is_dying:
+            player_rect = self.player.get_rect()
+            for enemy in self.level_manager.current_level.enemies:
+                if enemy.is_alive and not enemy.is_dying:
+                    if player_rect.colliderect(enemy.get_rect()):
+                        self.player.take_damage(10)
+                        break
+
         # Update current level (enemies, etc.)
         self.level_manager.current_level.update(self.player, dt)
 
         # check if player is at an exit
-        self.level_manager.check_transition(self.player)
+        if self.player.is_alive:
+            self.level_manager.check_transition(self.player)
 
     def draw(self):
         # Draw level (background and enemies)

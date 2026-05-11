@@ -146,6 +146,46 @@ class Enemy:
 
         distance = self.get_distance_to(player_center_x, player_center_y)
 
+        # If player is dead, move away from corpse
+        if not player.is_alive:
+            if distance < 150:  # Move away if within 150 pixels
+                self.state = "walk"
+
+                # Calculate direction away from player
+                dx = my_center_x - player_center_x
+                dy = my_center_y - player_center_y
+                distance = max(distance, 0.001)
+
+                # Normalize and apply speed
+                dx = (dx / distance) * self.speed
+                dy = (dy / distance) * self.speed
+
+                # Update position
+                self.x += dx
+                self.y += dy
+
+                # Update facing direction
+                if dx < 0:
+                    self.facing_left = True
+                else:
+                    self.facing_left = False
+
+                # Update animation
+                self.animation_counter += self.animation_speed
+                if self.animation_counter >= 1:
+                    self.animation_counter = 0
+                    self.frame = (self.frame + 1) % self.walk_frames
+            else:
+                # Idle when far enough away
+                self.state = "idle"
+                self.animation_counter += self.animation_speed
+                if self.animation_counter >= 1:
+                    self.animation_counter = 0
+                    self.frame = (self.frame + 1) % self.idle_frames
+
+            self.current_sprite = self.get_sprite(self.state, self.frame)
+            return
+
         # Update facing direction
         if player_center_x < my_center_x:
             self.facing_left = True
@@ -259,8 +299,8 @@ class Enemy:
         """Get enemy rect for collision detection"""
         return pygame.Rect(
             self.x, self.y,
-            self.idle_frame_width * self.scale,
-            self.idle_frame_height * self.scale
+            self.idle_frame_width // 2 * self.scale,
+            self.idle_frame_height // 2 * self.scale
         )
 
     def take_damage(self, amount):
