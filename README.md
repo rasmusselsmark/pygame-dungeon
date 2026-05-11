@@ -41,7 +41,7 @@ deactivate
 
 ```
 pygame-dungeon/
-├── assets/           # Game assets
+├── assets/          # Game assets
 │   ├── images/      # Sprites, backgrounds, etc.
 │   ├── sounds/      # Sound effects and music
 │   └── fonts/       # Custom fonts
@@ -57,3 +57,8 @@ pygame-dungeon/
 
 - Python 3.8 or higher (including Python 3.13+)
 - Pygame-CE (Community Edition) 2.5.0+
+
+# Credits
+
+* Knight: https://pixelfelix.itch.io/knight-anim-set
+* Background: "pixelart 2d top-down dungeon game background. very simple with just outer walls with openings" AI prompt

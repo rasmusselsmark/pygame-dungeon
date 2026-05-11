@@ -12,7 +12,7 @@ class Player:
         self.display_size = self.sprite_size * self.scale
 
         # Load sprite sheet
-        sheet_path = os.path.join("assets", "images", "knight.png")
+        sheet_path = os.path.join("assets", "images", "CharAni-Sheet4.png")
         self.sprite_sheet = pygame.image.load(sheet_path).convert_alpha()
 
         # Animation state
@@ -24,10 +24,10 @@ class Player:
 
         # Sprite rows for each direction (row index in sprite sheet)
         self.animations = {
-            "right": 0,
-            "up": 1,
-            "left": 2,
-            "down": 3,
+            "right": 1,
+            "up": 2,
+            "left": 3,
+            "down": 4,
         }
 
         # Current sprite
