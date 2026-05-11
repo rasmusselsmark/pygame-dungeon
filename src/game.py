@@ -1,6 +1,7 @@
 import pygame
 import os
 from pygame.locals import *
+from src.player import Player
 
 
 class Game:
@@ -19,6 +20,9 @@ class Game:
         self.background = pygame.image.load(bg_path).convert()
         self.background = pygame.transform.scale(self.background, (width, height))
 
+        # Create player in center of screen
+        self.player = Player(width // 2 - 24, height // 2 - 24)
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -28,10 +32,12 @@ class Game:
                     self.running = False
 
     def update(self):
-        pass
+        keys = pygame.key.get_pressed()
+        self.player.update(keys)
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
+        self.player.draw(self.screen)
         pygame.display.flip()
 
     def run(self):
